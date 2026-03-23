@@ -11,26 +11,29 @@ export class AuthService {
     ) {}
 
     async login(mail: string, pass: string) {
-        const user = await this.usersService.findByEmail(mail);
+        try {
+            const user = await this.usersService.findByEmail(mail);
 
-        if (!user) throw new UnauthorizedException();
+            if (!user) throw new UnauthorizedException();
 
-        const valid = await bcrypt.compare(pass, user.pass || '');
+            const valid = await bcrypt.compare(pass, user.pass || '');
 
-        if (!valid) throw new UnauthorizedException();
+            if (!valid) throw new UnauthorizedException();
 
-        const payload = {
-            sub: user.id,
-            mail: user.mail,
-        };
+            const payload = {
+                sub: user.id,
+                mail: user.mail,
+            };
 
-        return {
-            accessToken: this.jwtService.sign(payload, {
-                expiresIn: '15m',
-            }),
-            refreshToken: this.jwtService.sign(payload, {
-                expiresIn: '7d',
-            }),
-        };
+            return {
+                accessToken: this.jwtService.sign(payload),
+                refreshToken: this.jwtService.sign(payload, {
+                    expiresIn: '7d',
+                }),
+            };
+        } catch (error) {
+            console.error('Error logging in: ', error);
+            throw error;
+        }
     }
 }
