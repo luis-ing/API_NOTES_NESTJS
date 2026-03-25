@@ -17,13 +17,25 @@ export class NotesService {
         });
     }
 
-    findAll() {
-        return this.prisma.notes.findMany();
+    findAll(idUser: number) {
+        return this.prisma.notes.findMany({
+            where: {
+                userCreated: idUser,
+                isActive: true,
+            },
+            select: {
+                id: true,
+                title: true,
+                content: true,
+                dateCreated: true,
+                dateUpdated: true,
+            },
+        });
     }
 
-    update(id, data, userId) {
+    update(data, userId) {
         return this.prisma.notes.update({
-            where: { id },
+            where: { id: data.id },
             data: {
                 title: data.title,
                 content: data.content,
@@ -33,9 +45,17 @@ export class NotesService {
         });
     }
 
-    delete(id: number) {
-        return this.prisma.notes.delete({
+    async delete(id: number) {
+        const note = await this.prisma.notes.update({
             where: { id },
+            data: {
+                isActive: false,
+            },
         });
+        if (note) {
+            return { success: true };
+        } else {
+            return { success: false };
+        }
     }
 }
